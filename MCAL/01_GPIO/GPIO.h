@@ -136,15 +136,19 @@ typedef enum
 *                                - GPIO_SPEED: Pin speed:
 *                                              - Low_speed
 *                                              - Medium_speed
-*											   - High_speed
-*											   - VeryHigh_speed
+*                                              - High_speed
+*                                              - VeryHigh_speed
 *                                - GPIO_AF: Pin alternate function (e.g., AF0 ~ AF15)
-* @return       :  GPIO_OK if successful, GPIO_ERROR otherwise
+* @return       :  GPIO_ErrorStatus_t:
+*			         - GPIO_OK
+*				 - GPIO_InvalidPort
+*				 - GPIO_InvalidPin
+*				 - GPIO_Invalidspeed
+*				 - GPIO_Invalidmode
+*				 - GPIO_NULLPTR
 ****************************************************************************************/
 GPIO_ErrorStatus_t GPIO_InitPin(GPIO_PinCfg_t* AddPinCfg);
 
-
-GPIO_ErrorStatus_t GPIO_InitPin(GPIO_PinCfg_t* AddPinCfg);
 
 /****************************** GPIO_SetPinValue *****************************************
 * @description :Sets the value of a specific pin on a GPIO port to(GPIO_HIGH or GPIO_LOW)*                    
@@ -153,7 +157,12 @@ GPIO_ErrorStatus_t GPIO_InitPin(GPIO_PinCfg_t* AddPinCfg);
 *                  Copy_Pin  - Pin index (GPIO_PIN0 ~ GPIO_PIN15)                        *
 *                  Copy_Value - Value to be set for the pin (GPIO_HIGH or GPIO_LOW)      *       
 *                                                                                        *
-* @return       :  GPIO_OK if successful, GPIO_ERROR otherwise                           *
+*  @return       :  GPIO_ErrorStatus_t:
+*			         - GPIO_OK
+*				 - GPIO_InvalidPort
+*				 - GPIO_InvalidPin
+*				 - GPIO_Invalidvalue
+*				 - GPIO_NULLPTR				                          
 ****************************************************************************************/
 GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u8 Copy_Value);
 
@@ -164,7 +173,11 @@ GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u8 Copy_Value);
 *                  Copy_Pin  - Pin index (GPIO_PIN0 ~ GPIO_PIN15)                        *
 *                  Add_Value - Pointer to where the pin value will be stored             *
 *                                                                                        *
-* @return       :  GPIO_OK if successful, GPIO_ERROR otherwise                           *
+*@return       :  GPIO_ErrorStatus_t:
+*			         - GPIO_OK
+*				 - GPIO_InvalidPort
+*				 - GPIO_InvalidPin
+*				 - GPIO_NULLPTR		                                         *
 ****************************************************************************************/
 GPIO_ErrorStatus_t GPIO_GetPinValue(void* Copy_Port,u32 Copy_Pin,u8* Add_Value);
 
