@@ -12,10 +12,10 @@
 #include "std_types.h"
 #include "LED_cfg.h"
 
-#define LED_STATE_ON 1
-#define LED_STATE_OFF 0
-#define LED_CONN_FWD 0
-#define LED_CONN_REV 1
+#define LED_STATE_ON  0x00000001
+#define LED_STATE_OFF 0X00010000
+#define LED_CONN_FWD  0x00000000
+#define LED_CONN_REV  0x00010001
 
 /*** Led configurations ***/
 typedef struct{
@@ -56,7 +56,7 @@ LED_ERRORSTATUS_t LED_Init(void);
  *         - LED_InvalidLed
  *         - LED_InvalidStatus
  */
-LED_ERRORSTATUS_t LED_SetStatus(u32 Copy_LED, u8 Copy_Status);
+LED_ERRORSTATUS_t LED_SetStatus(u32 Copy_LED, u32 Copy_Status);
 	
 
 

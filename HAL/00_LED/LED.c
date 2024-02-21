@@ -26,14 +26,14 @@ LED_ERRORSTATUS_t LED_Init(void)
 	return RetLedError;
 }
 
-LED_ERRORSTATUS_t LED_SetStatus(u32 Copy_LED, u8 Copy_Status)
+LED_ERRORSTATUS_t LED_SetStatus(u32 Copy_LED, u32 Copy_Status)
 {
 	LED_ERRORSTATUS_t RetLedError=LED_OK;
 	if(Copy_LED>_LED_NUM)
 	{
 		RetLedError=LED_InvalidLed;
 	}
-	else if(!(Copy_Status==LED_STATE_OFF)||(Copy_Status==LED_STATE_ON))
+	else if(Copy_Status !=LED_STATE_ON && Copy_Status!=LED_STATE_OFF)
 	{
 		RetLedError=LED_InvalidStatus;
 	}
