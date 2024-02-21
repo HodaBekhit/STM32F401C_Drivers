@@ -4,8 +4,9 @@
  * Created: 2/16/2024 3:54:31 PM
  *  Author: Dell
  */ 
-
+#include "std_types.h"
 #include "GPIO.h"
+
 /*** masks ***/
 #define MODER_Mask 0b11000
 #define OTYPER_Mask 0b00100
@@ -18,10 +19,7 @@ GPIO_ErrorStatus_t GPIO_InitPin(GPIO_PinCfg_t* AddPinCfg)
 	GPIO_ErrorStatus_t GPIO_RetError= GPIO_OK;
 	if (AddPinCfg->GPIO_PORT != GPIO_A &&
     AddPinCfg->GPIO_PORT != GPIO_B &&
-    AddPinCfg->GPIO_PORT != GPIO_C &&
-    AddPinCfg->GPIO_PORT != GPIO_D &&
-    AddPinCfg->GPIO_PORT != GPIO_E &&
-    AddPinCfg->GPIO_PORT != GPIO_H) {
+    AddPinCfg->GPIO_PORT != GPIO_C) {
     GPIO_RetError= GPIO_InvalidPort;
 }
   else if(AddPinCfg->GPIO_PIN > GPIO_PIN15)
@@ -84,7 +82,7 @@ GPIO_ErrorStatus_t GPIO_InitPin(GPIO_PinCfg_t* AddPinCfg)
  }
 	return GPIO_RetError;
 }
-GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u8 Copy_Value)
+GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u32 Copy_Value)
 {
 	GPIO_ErrorStatus_t GPIO_RetError= GPIO_OK;
     if( Copy_Pin > GPIO_PIN15)
@@ -101,7 +99,7 @@ GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u8 Copy_Value)
 	}
 	else
 	{
-		((GPIO_t*)Copy_Port)->BSRR|=(1<<(Copy_Pin+Copy_Value));
+		((GPIO_t*)Copy_Port)->BSRR =Copy_Value<<Copy_Pin;
 	}
 	return GPIO_RetError;
 }

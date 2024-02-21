@@ -15,9 +15,7 @@
 #define GPIO_A ((void*)0x40020000)
 #define GPIO_B ((void*)0x40020400)
 #define GPIO_C ((void*)0x40020800)
-#define GPIO_D ((void*)0x40020C00)
-#define GPIO_E ((void*)0x40021000)
-#define GPIO_H ((void*)0x40021C00)
+
 
 /*** GPIO Pins index ***/
 #define GPIO_PIN0    0x00000000
@@ -81,8 +79,8 @@
 #define AF15 0b1111
 
 /*** GPIO_Value ***/
-#define GPIO_LOW 16
-#define GPIO_HIGH 0
+#define GPIO_LOW  0x00010000
+#define GPIO_HIGH 0x00000001
 
 /*** GPIO Registers ***/
 typedef struct{
@@ -124,7 +122,7 @@ typedef enum
 * @description  :  Initializes a GPIO pin according to the provided configuration.
 *
 * @param        :  AddPinCfg - Pointer to a structure containing pin configuration:
-*                                - GPIO_PORT: Pointer to the GPIO port (GPIO_A..E and H)
+*                                - GPIO_PORT: Pointer to the GPIO port (GPIO_A/B/C)
 *                                - GPIO_PIN: Pin index (GPIO_PIN0 ~ GPIO_PIN15)
 *                                - GPIO_MODE: Pin mode:
 *                                             - output_PP, output_PP_PU, output_PP_PD,
@@ -136,48 +134,47 @@ typedef enum
 *                                - GPIO_SPEED: Pin speed:
 *                                              - Low_speed
 *                                              - Medium_speed
-*                                              - High_speed
-*                                              - VeryHigh_speed
+*											   - High_speed
+*											   - VeryHigh_speed
 *                                - GPIO_AF: Pin alternate function (e.g., AF0 ~ AF15)
 * @return       :  GPIO_ErrorStatus_t:
-*			         - GPIO_OK
-*				 - GPIO_InvalidPort
-*				 - GPIO_InvalidPin
-*				 - GPIO_Invalidspeed
-*				 - GPIO_Invalidmode
-*				 - GPIO_NULLPTR
+*								- GPIO_OK
+*								- GPIO_InvalidPort
+*								- GPIO_InvalidPin
+*								- GPIO_Invalidspeed
+*								- GPIO_Invalidmode
+*								- GPIO_NULLPTR
 ****************************************************************************************/
 GPIO_ErrorStatus_t GPIO_InitPin(GPIO_PinCfg_t* AddPinCfg);
-
 
 /****************************** GPIO_SetPinValue *****************************************
 * @description :Sets the value of a specific pin on a GPIO port to(GPIO_HIGH or GPIO_LOW)*                    
 *																						 *
-* @param        :  Copy_Port - Pointer to the GPIO port (GPIO_A..E and H)                *
+* @param        :  Copy_Port - Pointer to the GPIO port (GPIO_A/B/C)                *
 *                  Copy_Pin  - Pin index (GPIO_PIN0 ~ GPIO_PIN15)                        *
 *                  Copy_Value - Value to be set for the pin (GPIO_HIGH or GPIO_LOW)      *       
 *                                                                                        *
-*  @return       :  GPIO_ErrorStatus_t:
-*			         - GPIO_OK
-*				 - GPIO_InvalidPort
-*				 - GPIO_InvalidPin
-*				 - GPIO_Invalidvalue
-*				 - GPIO_NULLPTR				                          
+* @return       :  GPIO_ErrorStatus_t:
+*								- GPIO_OK
+*								- GPIO_InvalidPort
+*								- GPIO_InvalidPin
+*								- GPIO_Invalidvalue
+*								- GPIO_NULLPTR                           
 ****************************************************************************************/
-GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u8 Copy_Value);
+GPIO_ErrorStatus_t GPIO_SetPinValue(void* Copy_Port,u32 Copy_Pin,u32 Copy_Value);
 
 /****************************** GPIO_GetPinValue *****************************************
 * @description  :  Reads the value of a specific pin on a GPIO port.                     *
 *																						 *
-* @param        :  Copy_Port - Pointer to the GPIO port (GPIO_A..E and H)                *
+* @param        :  Copy_Port - Pointer to the GPIO port (GPIO_A/B/C)               *
 *                  Copy_Pin  - Pin index (GPIO_PIN0 ~ GPIO_PIN15)                        *
 *                  Add_Value - Pointer to where the pin value will be stored             *
 *                                                                                        *
-*@return       :  GPIO_ErrorStatus_t:
-*			         - GPIO_OK
-*				 - GPIO_InvalidPort
-*				 - GPIO_InvalidPin
-*				 - GPIO_NULLPTR		                                         *
+** @return       :  GPIO_ErrorStatus_t:													 * 
+*								- GPIO_OK                                                *
+*								- GPIO_InvalidPort
+*								- GPIO_InvalidPin
+*								- GPIO_NULLPTR                                          *
 ****************************************************************************************/
 GPIO_ErrorStatus_t GPIO_GetPinValue(void* Copy_Port,u32 Copy_Pin,u8* Add_Value);
 
