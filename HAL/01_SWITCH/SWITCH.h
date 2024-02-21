@@ -24,7 +24,6 @@ typedef struct{
 	void* SWITCH_Port;
 	u32 SWITCH_Pin;
 	u32 SWITCH_Mode;
-	u32 SWITCH_Speed;
 	}SWITCH_cfg_t;
 	
 /*** Error Status ***/
