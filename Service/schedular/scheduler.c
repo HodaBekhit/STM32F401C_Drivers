@@ -46,7 +46,7 @@ static void scheduler(void)
 void scheduler_init(void)
 {
 	// init vars (if needed)
-
+	STK_Init();
 	// systick configure
 	STK_SetTime_ms(SCHED_TICK_TIME_ms);
 	STK_RegisterCallback(scheduler_tickcb);

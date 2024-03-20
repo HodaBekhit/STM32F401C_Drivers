@@ -10,8 +10,10 @@
 
 /*** Runnable Names ***/
 typedef enum {
-	//SWITCH,
-    ToggleRed,
+	SWITCH,
+	switch_led,
+    //ToggleRed,
+	//Traffic_Light,
 	_Runnables_NUM
 }RUNNABLES_t;
 
