@@ -9,6 +9,9 @@
 #define STK_H_
 #include "std_types.h"
 
+#define STK_OneTime  1
+#define STK_Periodic 2
+
 typedef void (*STK_cbf_t) (void);
 
 typedef enum{
@@ -19,7 +22,7 @@ typedef enum{
 
 /* functions prototypes */
 
-/********************************* STK_ErrorStatus_t STK_Init(void); *****************************************
+/*********************************  STK_Init(void); **********************************************************
  * @brief:    Initializes the SysTick timer. (Set clock source & interrupt state) ---------------------------*
  * @return:   Error status (Report Error if user configured invalid clock source.) --------------------------*
  ************************************************************************************************************/
@@ -27,8 +30,11 @@ STK_ErrorStatus_t STK_Init(void);
 
 /********************************* STK_Start *****************************************************************
  * @brief:    Enables the SysTick timer. --------------------------------------------------------------------*
+ * @param_in: STK_Mode, Can be: -----------------------------------------------------------------------------*
+ *            - STK_OneTime ---------------------------------------------------------------------------------*
+ *            - STK_Periodic --------------------------------------------------------------------------------*
  ************************************************************************************************************/
-void STK_Start(void);
+void STK_Start(u8 STK_Mode);
 
 /********************************* STK_Stop ******************************************************************
  * @brief:    Disables the SysTick timer. -------------------------------------------------------------------*
@@ -40,7 +46,7 @@ void STK_Stop(void);
  * @param_in:  CopyTime_ms: The time interval in milliseconds. ----------------------------------------------*
  * @return:   Error status (Report Error if the load value exceeds the register limit). ---------------------*
  ************************************************************************************************************/
-STK_ErrorStatus_t STK_SetTime_ms(u8 CopyTime_ms);
+STK_ErrorStatus_t STK_SetTime_ms(u32 CopyTime_ms);
 
 /********************************* STK_IsExpired *************************************************************
  * @brief:    Checks if the SysTick interrupt has expired. --------------------------------------------------*

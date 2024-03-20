@@ -11,7 +11,7 @@
 #include "STK_priv.h"
 
 /*AHB frequency depends on the chosen clock source, assuming HSE is selected.*/
-#define STK_AHB_FREQ 16000000
+#define STK_AHB_FREQ 16000000UL
 
 /* Clock source selection
  * Options:
@@ -27,12 +27,6 @@
  */
 #define STK_TICKINT STK_INT_ENABLE
 
-/* Configure STK Mode
- * Options:
- * - STK_OneTime
- * - STK_Periodic
- */
-#define STK_Mode STK_OneTime
 
 
 #endif /* STK_CFG_H_ */

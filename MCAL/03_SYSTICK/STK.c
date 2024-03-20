@@ -14,12 +14,14 @@
 
 
 /*SYSTICK Base Address*/
-#define STK_BASEADDRESS 0xE000E010
+#define STK_BASEADDRESS (0xE000E010UL)
 /* the base address as pointer to the SYSTICK registers*/
 #define STK ((void* )STK_BASEADDRESS)
 
 /* Static Pointer systickcbf_t type, Points to APP_cbf*/
-static STK_cbf_t APP_cbf;
+static STK_cbf_t APP_cbf=NULLPTR;
+
+static u8 STK_global_Mode=STK_OneTime;
 
 /* SYSTICK Registers definitions */
 typedef struct
@@ -48,8 +50,14 @@ typedef struct
 	 return STK_RetErrorStatus;
  }
 
- void STK_Start(void)
+ void STK_Start(u8 STK_Mode)
  {
+	 /* Set The timer mode */
+	 STK_global_Mode=STK_Mode;
+
+	 /* clear the current timer value */
+	 ((STK_RegisterOffset_t*)(STK))->VAL = 1U;
+
     /* enable counter*/
     ((STK_RegisterOffset_t*)(STK))->CTRL|=Enable_Mask;
  }
@@ -60,7 +68,7 @@ typedef struct
 
  }
 
- STK_ErrorStatus_t STK_SetTime_ms(u8 CopyTime_ms)
+ STK_ErrorStatus_t STK_SetTime_ms(u32 CopyTime_ms)
  {
      STK_ErrorStatus_t STK_RetErrorStatus = STK_OK;
 
@@ -106,18 +114,19 @@ typedef struct
  {
 	 if(APP_cbf)
 	 {
-		 if(STK_Mode==STK_OneTime)
+		 APP_cbf();
+		 if(STK_global_Mode==STK_OneTime)
 		 {
-			 APP_cbf();
+
 			 STK_Stop();
 		 }
 		 else
 		 {
-			 APP_cbf();
+			/* do nothing*/
 		 }
 	 }
 	 else
 	 {
-		 // do nothing
+		 /*do nothing*/
 	 }
  }

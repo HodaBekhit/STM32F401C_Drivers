@@ -13,7 +13,6 @@
 #define Proc_clk_AHB 0x00000004
 #define STK_INT_ENABLE 0x00000002
 #define STK_INT_Disable 0x00000000
-#define STK_OneTime 1
-#define STK_Periodic 2
+
 
 #endif /* STK_PRIV_H_ */
