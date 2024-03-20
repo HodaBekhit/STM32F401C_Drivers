@@ -12,12 +12,14 @@
 #define PriorityGrouping_Mask 0xffff0700
 /* mask for IPR register */
 #define IPR_Mask 0xf0
+/* No of Bits that the processor implemented in NVIC_IPR*/
+#define ImplementedPriorityBits 4
 /*NVIC Base Address*/
-#define NVIC_BASEADDRESS 0xE000E100
+#define NVIC_BASEADDRESS (0xE000E100UL)
 /* the base address as pointer to the NVIC registers*/
 #define NVIC ((void* )NVIC_BASEADDRESS)
 /*SCB Base Address*/
-#define SCB_BASEADDRESS 0xE000E008
+#define SCB_BASEADDRESS (0xE000E008UL)
 /* the base address as pointer to the SCB registers*/
 #define SCB ((void* )SCB_BASEADDRESS)
 
@@ -35,7 +37,7 @@ typedef struct
     volatile u32 IABR[8];
     volatile u32 Reserved5[56];
     volatile u8  IPR[240]; // volatile u32 IPR[60];
-    volatile u32 Reserved6[580];
+    volatile u32 Reserved6[644];
     volatile u32 STIR;
 }NVIC_RegisterOffset_t;
 
@@ -43,7 +45,7 @@ typedef struct
 typedef struct
 {
 	volatile u32 ACTLR;
-	volatile u32 Reserved1[830];
+	volatile u32 Reserved1[829];
 	volatile u32 CPUID;
 	volatile u32 ICSR;
 	volatile u32 VTOR;
@@ -79,7 +81,7 @@ NVIC_ErrorStatus_t NVIC_EnableInterrupt(u8 IRQn)
 	{
 		NVIC_RetErrorState=NVIC_Invalid_IRQn;
 	}
-	((NVIC_RegisterOffset_t*)(NVIC))->ISER[IRQn/32]|=1<<(IRQn%32);
+	((NVIC_RegisterOffset_t*)(NVIC))->ISER[IRQn/32]=(1UL<<(IRQn%32));
 
 	return NVIC_RetErrorState;
 }
@@ -90,7 +92,7 @@ NVIC_ErrorStatus_t NVIC_DisableInterrupt(u8 IRQn)
 		{
 			NVIC_RetErrorState=NVIC_Invalid_IRQn;
 		}
-	((NVIC_RegisterOffset_t*)(NVIC))->ICER[IRQn/32]=1<<(IRQn%32);
+	((NVIC_RegisterOffset_t*)(NVIC))->ICER[IRQn/32]=(1UL<<(IRQn%32));
 
 		return NVIC_RetErrorState;
 }
@@ -101,7 +103,7 @@ NVIC_ErrorStatus_t NVIC_SetPending(u8 IRQn)
 		{
 			NVIC_RetErrorState=NVIC_Invalid_IRQn;
 		}
-	((NVIC_RegisterOffset_t*)(NVIC))->ISPR[IRQn/32]|=1<<(IRQn%32);
+	((NVIC_RegisterOffset_t*)(NVIC))->ISPR[IRQn/32]=(1UL<<(IRQn%32));
 
 		return NVIC_RetErrorState;
 }
@@ -112,7 +114,7 @@ NVIC_ErrorStatus_t NVIC_ClearPending(u8 IRQn)
 		{
 			NVIC_RetErrorState=NVIC_Invalid_IRQn;
 		}
-	((NVIC_RegisterOffset_t*)(NVIC))->ICPR[IRQn/32]=1<<(IRQn%32);
+	((NVIC_RegisterOffset_t*)(NVIC))->ICPR[IRQn/32]=(1UL<<(IRQn%32));
 
 		return NVIC_RetErrorState;
 }
@@ -133,25 +135,21 @@ NVIC_ErrorStatus_t NVIC_GetActiveStatus(u8 IRQn, u8* ActiveStatus)
 			{
 				Reg_num=IRQn/32;
 				Bit_num=IRQn%32;
-				*ActiveStatus=(((NVIC_RegisterOffset_t*)(NVIC))->IABR[Reg_num]>>Bit_num)&0x01;
+				*ActiveStatus=(((NVIC_RegisterOffset_t*)(NVIC))->IABR[Reg_num]>>Bit_num)&1UL;
 			}
 			return NVIC_RetErrorState;
 }
 
 NVIC_ErrorStatus_t NVIC_SetPriority(u8 IRQn,u32 PriorityGrouping,u8 GroupPriorty,u8 SubPriority)
 {
-	u8 SubPriorityBits_Num;
-	u8 GroupPriorityBits_Num;
-	u8 PRIGROUP_Value;
-	u8 Max_GroupPriority_Value;
-	u8 Max_SubPriority_Value;
 	u32 Loc_RegisterValue;
 	/* extract PRIGROUP bits value*/
-	PRIGROUP_Value=(PriorityGrouping >> 8) & 0x07;
-	SubPriorityBits_Num=PRIGROUP_Value-3; //calculate the number of subpriority bits
-	GroupPriorityBits_Num=4-SubPriorityBits_Num; //calculate the number of grouppriority bits
-	Max_GroupPriority_Value=power(2,GroupPriorityBits_Num)-1;
-	Max_SubPriority_Value=power(2,SubPriorityBits_Num)-1;
+	u8 PRIGROUP_Value=(PriorityGrouping >> 8) & 0x07;
+	u8 SubPriorityBits_Num=PRIGROUP_Value-3; //calculate the number of subpriority bits
+	u8 GroupPriorityBits_Num=ImplementedPriorityBits-SubPriorityBits_Num; //calculate the number of grouppriority bits
+	u8 Max_GroupPriority_Value=power(2,GroupPriorityBits_Num)-1;
+	u8 Max_SubPriority_Value=power(2,SubPriorityBits_Num)-1;
+
 	NVIC_ErrorStatus_t NVIC_RetErrorState=NVIC_OK;
 	if((PriorityGrouping<Group_priority_4Bits)||(PriorityGrouping>Group_priority_None))
 	{
@@ -177,7 +175,7 @@ NVIC_ErrorStatus_t NVIC_SetPriority(u8 IRQn,u32 PriorityGrouping,u8 GroupPriorty
 		/* Set Priority Value in NVIC_IPR[IRQn] Register */
 		Loc_RegisterValue=((NVIC_RegisterOffset_t*)(NVIC))->IPR[IRQn];
 		Loc_RegisterValue&=~(IPR_Mask);
-		Loc_RegisterValue|=(SubPriority<<4)|(GroupPriorty<<(4+SubPriorityBits_Num));
+		Loc_RegisterValue|=(SubPriority<<ImplementedPriorityBits)|(GroupPriorty<<(ImplementedPriorityBits+SubPriorityBits_Num));
 		((NVIC_RegisterOffset_t*)(NVIC))->IPR[IRQn]|=Loc_RegisterValue;
 	}
 	return NVIC_RetErrorState;
@@ -196,7 +194,7 @@ NVIC_ErrorStatus_t NVIC_GetPriority(u8 IRQn,u8* Priority)
 	}
 	else
 	{
-		*Priority=(((NVIC_RegisterOffset_t*)(NVIC))->IPR[IRQn]&IPR_Mask)>>4;
+		*Priority=(((NVIC_RegisterOffset_t*)(NVIC))->IPR[IRQn]&IPR_Mask)>>ImplementedPriorityBits;
 	}
 	return NVIC_RetErrorState;
 }
