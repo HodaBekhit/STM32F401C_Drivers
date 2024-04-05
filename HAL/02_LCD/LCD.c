@@ -279,7 +279,7 @@ static void InitSM(void)
 	switch (LCD_InitState)
 	{
 		case PowerON:
-		LocCounter_ms+=30;//LCD_Periodicityms;
+		LocCounter_ms+=LCD_Periodicityms;
 		// wait 30 ms
 		if((LocCounter_ms/30)>0)
 		{
