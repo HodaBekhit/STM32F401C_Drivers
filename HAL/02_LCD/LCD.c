@@ -19,6 +19,8 @@
 #define LCD_ENTRYMODE_SETINC_SHOFF 0x06
 #define LCD_CLR                 0x01
 
+/* Max Buffer Requests*/
+#define MAXBufferSize 10
 /* Line Numbers */
 #define FirstLine               0
 #define SecondLine              1
@@ -106,13 +108,16 @@ typedef struct
 } PositionRequest_t;
 
 /* Static Declarations */
-static LCDRequest_t LCDRequest;
-static StringRequest_t WriteStrReq;
-static PositionRequest_t SetPosReq;
-static NumberRequest_t WriteNumReq;
+static LCDRequest_t LCDRequest[MAXBufferSize];
+static StringRequest_t WriteStrReq[MAXBufferSize];
+static PositionRequest_t SetPosReq[MAXBufferSize];
+static NumberRequest_t WriteNumReq[MAXBufferSize];
 static LCDMode_t LCDMode = Off;
 static EnableState_t EnableState = EN_High;
 LCD_CBF fun=NULLPTR;
+
+u8 CurrRunnablePtr=0;
+ u8 i=0;
 
 /* Static Functions */
 static void LCD_enuWriteCommand(u8 Copy_u8Command);
@@ -139,12 +144,20 @@ void LCD_InitPins(void)
 
 void LCD_init_asynch(LCD_CBF cbf )
 {
+	u8 idx=0;
+    /*Initialize State to Be Idle*/
+    for( idx=0;idx<MAXBufferSize;idx++)
+    {
+    	LCDRequest[idx].State=Idle;
+    }
+
 	LCDMode=Init;
 	fun=cbf;
 }
 
 LCD_enumError_t LCD_enuWriteString_asynch(const char * string, LCD_CBF cbf)
 {
+
 	LCD_enumError_t Ret_LCDError=LCD_enuOk;
 	if(string==NULLPTR)
 	{
@@ -152,22 +165,26 @@ LCD_enumError_t LCD_enuWriteString_asynch(const char * string, LCD_CBF cbf)
 	}
 	else
 	{
-		if(LCDRequest.State==Idle)
-		{
-			//save user data
-			WriteStrReq.data= string;
-			WriteStrReq.CurrIdx=0;
-			//Edit LCD Request Type and State
-		    LCDRequest.Type=WriteString;
-		    LCDRequest.State=Busy;
-		    LCDRequest.cb=cbf;
-		}
+		u8 index = i % MAXBufferSize; // Calculate the index using modulo operation
+    if (LCDRequest[index].State == Idle)
+    {
+        // Save user data
+        WriteStrReq[index].data = string;
+        WriteStrReq[index].CurrIdx = 0;
+        // Edit LCD Request Type and State
+        LCDRequest[index].Type = WriteString;
+        LCDRequest[index].State = Busy;
+        LCDRequest[index].cb = cbf;
+    }
+    // Increment index and reset to 0 if it exceeds MAXBufferSize
+    i = (i + 1) % MAXBufferSize;
 	}
 	return Ret_LCDError;
 }
 
 LCD_enumError_t LCD_GotoPos_XY_async(u8 Copy_u8X, u8 Copy_u8Y,LCD_CBF cbf)
 {
+
 	LCD_enumError_t Ret_LCDError=LCD_enuOk;
 	if (Copy_u8X>1 || Copy_u8Y>15)
 	{
@@ -175,40 +192,50 @@ LCD_enumError_t LCD_GotoPos_XY_async(u8 Copy_u8X, u8 Copy_u8Y,LCD_CBF cbf)
 	}
 	else
 	{
-		if(LCDRequest.State==Idle)
+		u8 index = i % MAXBufferSize; // Calculate the index using modulo operation
+		if (LCDRequest[index].State == Idle)
 		{
-			//save user data
-			SetPosReq.X_Pos=Copy_u8X;
-			SetPosReq.Y_Pos=Copy_u8Y;
+			// Save user data
+			SetPosReq[index].X_Pos=Copy_u8X;
+			SetPosReq[index].Y_Pos=Copy_u8Y;
 			//Edit LCD Request Type and State
-		    LCDRequest.Type=SetPos;
-		    LCDRequest.State=Busy;
-		    LCDRequest.cb=cbf;
+			LCDRequest[index].Type=SetPos;
+			LCDRequest[index].State=Busy;
+			LCDRequest[index].cb=cbf;
 		}
+	    // Increment index and reset to 0 if it exceeds MAXBufferSize
+	    i = (i + 1) % MAXBufferSize;
+
 	}
 	return Ret_LCDError;
 }
 
 void LCD_ClearScreen_async(void)
 {
-	if(LCDRequest.State==Idle)
+
+	u8 index = i % MAXBufferSize; // Calculate the index using modulo operation
+	if(LCDRequest[index].State==Idle)
 	{
 		//Edit LCD Request Type and State
-	    LCDRequest.Type=Clear;
-	    LCDRequest.State=Busy;
+	    LCDRequest[index].Type=Clear;
+	    LCDRequest[index].State=Busy;
 	}
+    // Increment index and reset to 0 if it exceeds MAXBufferSize
+    i = (i + 1) % MAXBufferSize;
 }
-void LCD_enuWriteNumber_asynch(u16 Copy_u8Number)
+/*void LCD_enuWriteNumber_asynch(u16 Copy_u8Number)
 {
-		if(LCDRequest.State==Idle)
-		{
-			//save user data
-			WriteNumReq.Number=Copy_u8Number;
-			//Edit LCD Request Type and State
-		    LCDRequest.Type=WriteNumber;
-		    LCDRequest.State=Busy;
-		}
-}
+	if(LCDRequest.State==Idle)
+	{
+		//save user data
+		WriteNumReq.Number=Copy_u8Number;
+		//Edit LCD Request Type and State
+		LCDRequest.Type=WriteNumber;
+		LCDRequest.State=Busy;
+	}
+	// Increment index and reset to 0 if it exceeds MAXBufferSize
+	i = (i + 1) % MAXBufferSize;
+}*/
 // Runs every 2ms
 void LCD_TASK(void)
 {
@@ -218,9 +245,9 @@ void LCD_TASK(void)
 	}
 	else if(LCDMode==Operation)
 	{
-		if(LCDRequest.State==Busy)
+		if(LCDRequest[CurrRunnablePtr].State==Busy)
 		{
-			switch(LCDRequest.Type)
+			switch(LCDRequest[CurrRunnablePtr].Type)
 			{
 			case WriteString:
 			LCD_WriteStringProc();
@@ -252,7 +279,7 @@ static void InitSM(void)
 	switch (LCD_InitState)
 	{
 		case PowerON:
-		LocCounter_ms+=LCD_Periodicityms;
+		LocCounter_ms+=30;//LCD_Periodicityms;
 		// wait 30 ms
 		if((LocCounter_ms/30)>0)
 		{
@@ -340,29 +367,31 @@ static void InitSM(void)
 static void LCD_WriteStringProc(void)
 {
 	static EnableState_t EnableState=EN_High;
-	if(WriteStrReq.data[WriteStrReq.CurrIdx]!='\0')
+	if(WriteStrReq[CurrRunnablePtr].data[WriteStrReq[CurrRunnablePtr].CurrIdx]!='\0')
 	{
 		switch(EnableState)
 		{
 		  case EN_High:
-		  LCD_enuWriteData(WriteStrReq.data[WriteStrReq.CurrIdx]);
+		  LCD_enuWriteData(WriteStrReq[CurrRunnablePtr].data[WriteStrReq[CurrRunnablePtr].CurrIdx]);
 		  GPIO_SetPinValue(LCD_PINS_CFG[LCD_E].PORT, LCD_PINS_CFG[LCD_E].PIN, PinHigh);
 		  EnableState = EN_Low;
 	      break;
 		  case EN_Low:
 		  GPIO_SetPinValue(LCD_PINS_CFG[LCD_E].PORT, LCD_PINS_CFG[LCD_E].PIN, PinLow);
-		  WriteStrReq.CurrIdx++;
+		  WriteStrReq[CurrRunnablePtr].CurrIdx++;
 		  EnableState = EN_High;
 	      break;
 		}
 	}
 	else
 	{
-		LCDRequest.State=Idle;
-		LCDRequest.Type=None;
-		if(LCDRequest.cb)
+		LCDRequest[CurrRunnablePtr].State=Idle;
+		LCDRequest[CurrRunnablePtr].Type=None;
+		// Increment index with modulo operation to implement circular buffer behavior
+		CurrRunnablePtr = (CurrRunnablePtr + 1) % MAXBufferSize;
+		if(LCDRequest[CurrRunnablePtr].cb)
 		{
-			LCDRequest.cb();
+			LCDRequest[CurrRunnablePtr].cb();
 		}
 	}
 }
@@ -370,13 +399,13 @@ static void LCD_SetPosProc(void)
 {
 	static EnableState_t EnableState=EN_High;
 	u8 Loc_u8DDRAM_ADD=0;
-	 if(SetPosReq.X_Pos==FirstLine)
+	 if(SetPosReq[CurrRunnablePtr].X_Pos==FirstLine)
 	 {
-		 Loc_u8DDRAM_ADD=SetPosReq.Y_Pos;
+		 Loc_u8DDRAM_ADD=SetPosReq[CurrRunnablePtr].Y_Pos;
 	 }
-	 else if(SetPosReq.X_Pos==SecondLine)
+	 else if(SetPosReq[CurrRunnablePtr].X_Pos==SecondLine)
 	 {
-		 Loc_u8DDRAM_ADD=SetPosReq.Y_Pos+0x40;
+		 Loc_u8DDRAM_ADD=SetPosReq[CurrRunnablePtr].Y_Pos+0x40;
 	 }
 	 else
 	 {
@@ -393,12 +422,14 @@ static void LCD_SetPosProc(void)
 	  case EN_Low:
 	  GPIO_SetPinValue(LCD_PINS_CFG[LCD_E].PORT, LCD_PINS_CFG[LCD_E].PIN, PinLow);
 	  EnableState = EN_High;
-	  LCDRequest.State=Idle;
-	  LCDRequest.Type=None;
-	  if(LCDRequest.cb)
-	  		{
-	  			LCDRequest.cb();
-	  		}
+	  LCDRequest[CurrRunnablePtr].State=Idle;
+	  LCDRequest[CurrRunnablePtr].Type=None;
+	  // Increment index with modulo operation to implement circular buffer behavior
+	  CurrRunnablePtr = (CurrRunnablePtr + 1) % MAXBufferSize;
+	  if(LCDRequest[CurrRunnablePtr].cb)
+	  {
+		LCDRequest[CurrRunnablePtr].cb();
+	  }
 	  break;
 	}
 }
@@ -417,8 +448,14 @@ static void LCD_ClearProc(void)
 	  case EN_Low:
 	  GPIO_SetPinValue(LCD_PINS_CFG[LCD_E].PORT, LCD_PINS_CFG[LCD_E].PIN, PinLow);
 	  EnableState = EN_High;
-	  LCDRequest.State=Idle;
-	  LCDRequest.Type=None;
+	  LCDRequest[CurrRunnablePtr].State=Idle;
+	  LCDRequest[CurrRunnablePtr].Type=None;
+	  // Increment index with modulo operation to implement circular buffer behavior
+	  CurrRunnablePtr = (CurrRunnablePtr + 1) % MAXBufferSize;
+	  if(LCDRequest[CurrRunnablePtr].cb)
+	  {
+		LCDRequest[CurrRunnablePtr].cb();
+	  }
 	  break;
 	}
 }
